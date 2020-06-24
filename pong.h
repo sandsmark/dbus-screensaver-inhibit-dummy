@@ -53,6 +53,7 @@
 
 #include <QObject>
 #include <QDebug>
+#include <QDateTime>
 
 class Pong: public QObject
 {
@@ -61,27 +62,49 @@ class Pong: public QObject
     Q_CLASSINFO("D-Bus Interface", "org.freedesktop.ScreenSaver")
 
 public slots:
-    Q_SCRIPTABLE int Inhibit(const QString &appname, const QString &reason) {
-        qDebug() << appname << "tried to inhibit because of" << reason;
-        return 0xf4c0ff;
+    Q_SCRIPTABLE quint32 Inhibit(const QString &appname, const QString &reason) {
+        qDebug() << QDateTime::currentDateTime().toString(Qt::ISODate) << objectName() << QDateTime::currentDateTime().toString(Qt::ISODate) << appname << "Inhibit" << reason;
+        static int cookie = 0;
+        handedOut[++cookie] = appname;
+        return cookie ^ 0xf4c0ff;
     }
     Q_SCRIPTABLE void SimulateUserActivity() {
-        qDebug() << "some crap tried to simulate user activity";
+        qDebug() << QDateTime::currentDateTime().toString(Qt::ISODate) << objectName() << "SimulateUserActivity";
     }
+
+    Q_SCRIPTABLE void UnInhibit(quint32 cookie) {
+        cookie ^= 0xf4c0ff;
+
+        qDebug() << QDateTime::currentDateTime().toString(Qt::ISODate) << objectName() << handedOut.value(cookie) << "UnInhibit";
+        handedOut.remove(cookie);
+    }
+    Q_SCRIPTABLE void Uninhibit(quint32 cookie) {
+        cookie ^= 0xf4c0ff;
+
+        qDebug() << QDateTime::currentDateTime().toString(Qt::ISODate) << objectName() << handedOut.value(cookie) << "Uninhibit";
+        handedOut.remove(cookie);
+    }
+
+    protected:
+    QMap<int, QString> handedOut;
 };
 
 class GnomeSessionPong: public Pong
 {
     Q_OBJECT
-
     Q_CLASSINFO("D-Bus Interface", "org.gnome.SessionManager")
 };
 
 class GnomeScreensaverPong: public Pong
 {
     Q_OBJECT
-
     Q_CLASSINFO("D-Bus Interface", "org.gnome.ScreenSaver")
+};
+
+class XdgPowerPong : public Pong
+{
+    Q_OBJECT
+    Q_CLASSINFO("D-Bus Interface", "org.freedesktop.PowerManagement.Inhibit")
 };
 
 #endif

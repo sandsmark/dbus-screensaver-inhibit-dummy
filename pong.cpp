@@ -85,21 +85,37 @@ int main(int argc, char **argv)
         exit(1);
     }
 
+    if (!QDBusConnection::sessionBus().registerService("org.freedesktop.PowerManagement")) {
+        fprintf(stderr, "%s\n",
+                qPrintable(QDBusConnection::sessionBus().lastError().message()));
+        exit(1);
+    }
+
     Pong pong;
+    pong.setObjectName("orgfreedesktopScreenSaver");
     if (!QDBusConnection::sessionBus().registerObject("/org/freedesktop/ScreenSaver", &pong, QDBusConnection::ExportAllSlots)) {
         qWarning() << "Failed to register freedesktop";
         return 1;
     }
     GnomeSessionPong gnomepong1;
+    gnomepong1.setObjectName("orggnomeSessionManager");
     if (!QDBusConnection::sessionBus().registerObject("/org/gnome/SessionManager", &gnomepong1, QDBusConnection::ExportAllSlots)) {
         qWarning() << "Failed to register gnome session manager";
         return 1;
     }
     GnomeScreensaverPong gnomepong2;
+    gnomepong2.setObjectName("orggnomeScreenSaver");
     if (!QDBusConnection::sessionBus().registerObject("/org/gnome/ScreenSaver", &gnomepong2, QDBusConnection::ExportAllSlots)) {
         qWarning() << "Failed to register gnome screensaver";
         return 1;
     }
+    XdgPowerPong xdg;
+    xdg.setObjectName("orgfreedesktopPowerManagementInhibit");
+    if (!QDBusConnection::sessionBus().registerObject("/org/freedesktop/PowerManagement/Inhibit", &xdg, QDBusConnection::ExportAllSlots)) {
+        qWarning() << "Failed to register xdg power manager";
+        return 1;
+    }
+
 
     app.exec();
     return 0;
