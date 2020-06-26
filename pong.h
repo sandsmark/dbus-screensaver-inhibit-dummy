@@ -68,6 +68,13 @@ public slots:
         handedOut[++cookie] = appname;
         return cookie ^ 0xf4c0ff;
     }
+    Q_SCRIPTABLE quint32 Inhibit(const QString &appname, const quint32 xid, const QString &reason, const quint32 flags) {
+        qDebug() << QDateTime::currentDateTime().toString(Qt::ISODate) << objectName() << QDateTime::currentDateTime().toString(Qt::ISODate) << appname << "Inhibit" << reason << xid << flags;
+        static int cookie = 0;
+        handedOut[++cookie] = appname;
+        return cookie ^ 0xf4c0ff;
+    }
+
     Q_SCRIPTABLE void SimulateUserActivity() {
         qDebug() << QDateTime::currentDateTime().toString(Qt::ISODate) << objectName() << "SimulateUserActivity";
     }
